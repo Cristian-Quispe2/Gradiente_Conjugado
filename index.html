@@ -1,0 +1,3794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinanSys | Gradientes Conjugados Precondicionados</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root{
+    --bg:#f5f4f0;
+    --surface:#ffffff;
+    --surface2:#f8f8f6;
+    --ink:#252b2a;
+    --muted:#777f7b;
+    --line:#e9e9e3;
+    --green:#245c49;
+    --green2:#347b61;
+    --green-light:#e9f2ec;
+    --orange:#d28a46;
+    --orange-light:#fbf0e4;
+    --red:#bd5550;
+    --red-light:#f9eae8;
+    --blue:#617c91;
+    --blue-light:#eaf0f4;
+    --shadow:0 8px 30px rgba(38,48,40,.045);
+    --radius:16px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html{scroll-behavior:smooth}
+
+body{
+    font-family:'DM Sans',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+}
+
+button,input,select{font:inherit}
+
+button{cursor:pointer}
+
+a{color:inherit;text-decoration:none}
+
+.topbar{
+    height:66px;
+    background:rgba(255,255,255,.94);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 6%;
+    position:sticky;
+    top:0;
+    z-index:100;
+    backdrop-filter:blur(12px);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:-.8px;
+}
+
+.brand-icon{
+    width:35px;
+    height:35px;
+    background:var(--green);
+    color:white;
+    display:grid;
+    place-items:center;
+    border-radius:11px;
+    font-size:19px;
+}
+
+.brand span{color:var(--green)}
+
+.top-links{
+    display:flex;
+    align-items:center;
+    gap:26px;
+}
+
+.top-links a{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:600;
+    transition:.2s;
+}
+
+.top-links a:hover{color:var(--green)}
+
+.status-pill{
+    padding:7px 12px;
+    background:var(--green-light);
+    color:var(--green);
+    font-size:11px;
+    border-radius:20px;
+    font-weight:700;
+}
+
+.hero{
+    padding:65px 8% 60px;
+    background:#e9e9df;
+    position:relative;
+    overflow:hidden;
+}
+
+.hero::after{
+    content:"";
+    position:absolute;
+    width:370px;
+    height:370px;
+    border:1px solid rgba(36,92,73,.12);
+    border-radius:50%;
+    right:9%;
+    top:-170px;
+    box-shadow:0 0 0 35px rgba(36,92,73,.025),
+               0 0 0 75px rgba(36,92,73,.025);
+}
+
+.hero-content{
+    max-width:1200px;
+    margin:auto;
+    position:relative;
+    z-index:2;
+}
+
+.eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--green);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.6px;
+    font-weight:800;
+    margin-bottom:19px;
+}
+
+.eyebrow::before{
+    content:"";
+    height:2px;
+    width:24px;
+    background:var(--green);
+}
+
+.hero h1{
+    font-family:'Manrope',sans-serif;
+    font-size:clamp(34px,5vw,57px);
+    line-height:1.12;
+    letter-spacing:-2.5px;
+    max-width:760px;
+    margin-bottom:20px;
+}
+
+.hero h1 span{color:var(--green)}
+
+.hero-description{
+    max-width:670px;
+    color:#646d67;
+    font-size:14px;
+    line-height:1.9;
+}
+
+.hero-bottom{
+    display:flex;
+    gap:35px;
+    flex-wrap:wrap;
+    margin-top:35px;
+    padding-top:25px;
+    border-top:1px solid rgba(36,92,73,.15);
+}
+
+.hero-data{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+}
+
+.hero-data small{
+    color:#858b84;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.hero-data strong{
+    font-size:12px;
+    color:#3d4942;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:42px 25px 80px;
+}
+
+.section{
+    margin-bottom:65px;
+    scroll-margin-top:90px;
+}
+
+.section-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    margin-bottom:22px;
+}
+
+.section-number{
+    color:var(--green2);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.7px;
+    text-transform:uppercase;
+    margin-bottom:7px;
+}
+
+.section-heading h2{
+    font-family:'Manrope',sans-serif;
+    font-size:25px;
+    letter-spacing:-.8px;
+}
+
+.section-heading p{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:5px;
+    max-width:650px;
+}
+
+.card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+}
+
+.intro-grid{
+    display:grid;
+    grid-template-columns:1.45fr 1fr;
+    gap:18px;
+}
+
+.intro-main{
+    padding:27px;
+}
+
+.intro-main h3{
+    font-family:'Manrope',sans-serif;
+    font-size:19px;
+    margin-bottom:12px;
+}
+
+.intro-main p{
+    color:#68716b;
+    font-size:13px;
+    line-height:1.9;
+    margin-bottom:12px;
+}
+
+.intro-side{
+    padding:24px;
+    background:#e9eee8;
+    border-radius:var(--radius);
+}
+
+.intro-side h3{
+    font-size:14px;
+    margin-bottom:14px;
+}
+
+.variable-list{
+    display:grid;
+    gap:11px;
+}
+
+.variable-item{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    padding-bottom:9px;
+    border-bottom:1px solid rgba(36,92,73,.12);
+}
+
+.variable-item span:first-child{
+    font-weight:700;
+    color:var(--green);
+}
+
+.variable-item span:last-child{
+    color:#67736a;
+    text-align:right;
+}
+
+.notice{
+    padding:15px 18px;
+    border-radius:11px;
+    font-size:12px;
+    line-height:1.8;
+    margin-top:17px;
+}
+
+.notice.green{
+    background:var(--green-light);
+    color:#385b48;
+}
+
+.notice.orange{
+    background:var(--orange-light);
+    color:#80592f;
+}
+
+.notice.red{
+    background:var(--red-light);
+    color:#8b4541;
+}
+
+.notice strong{font-weight:800}
+
+.scenario-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.scenario-card{
+    padding:21px;
+    transition:.2s;
+    border:1px solid var(--line);
+    background:white;
+    border-radius:14px;
+}
+
+.scenario-card:hover{
+    transform:translateY(-3px);
+    box-shadow:var(--shadow);
+}
+
+.scenario-tag{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-bottom:13px;
+}
+
+.scenario-card h3{
+    font-size:16px;
+    margin-bottom:9px;
+}
+
+.scenario-card p{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.8;
+    min-height:60px;
+}
+
+.scenario-card button{
+    width:100%;
+    margin-top:17px;
+    padding:10px;
+    border:1px solid var(--line);
+    background:var(--surface2);
+    border-radius:8px;
+    color:var(--ink);
+    font-size:11px;
+    font-weight:700;
+    transition:.2s;
+}
+
+.scenario-card button:hover{
+    background:var(--green);
+    color:white;
+}
+
+.scenario-card.ideal{border-top:3px solid var(--green2)}
+.scenario-card.stress{border-top:3px solid var(--orange)}
+.scenario-card.bad{border-top:3px solid var(--red)}
+
+.formulation{
+    padding:24px;
+}
+
+.formula{
+    background:#f3f4ef;
+    padding:20px;
+    border-radius:11px;
+    font-family:'Manrope',sans-serif;
+    text-align:center;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.3px;
+    overflow-x:auto;
+}
+
+.formula small{
+    display:block;
+    font-family:'DM Sans',sans-serif;
+    font-size:11px;
+    font-weight:400;
+    color:var(--muted);
+    margin-top:9px;
+}
+
+.explanation-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:13px;
+    margin-top:17px;
+}
+
+.explanation{
+    padding:16px;
+    background:var(--surface2);
+    border:1px solid var(--line);
+    border-radius:11px;
+}
+
+.explanation h4{
+    font-size:12px;
+    margin-bottom:7px;
+}
+
+.explanation p{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.8;
+}
+
+.editor-card{padding:23px}
+
+.editor-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.editor-toolbar h3{
+    font-size:14px;
+}
+
+.editor-toolbar p{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.btn{
+    padding:10px 15px;
+    border:1px solid var(--line);
+    background:white;
+    border-radius:8px;
+    color:var(--ink);
+    font-size:11px;
+    font-weight:700;
+    transition:.2s;
+}
+
+.btn:hover{border-color:var(--green);color:var(--green)}
+
+.btn.primary{
+    background:var(--green);
+    color:white;
+    border-color:var(--green);
+}
+
+.btn.primary:hover{background:#194b39}
+
+.btn.danger{
+    background:var(--red-light);
+    color:var(--red);
+    border-color:transparent;
+}
+
+.editor-grid{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:24px;
+}
+
+.matrix-wrapper{
+    overflow-x:auto;
+    padding-bottom:5px;
+}
+
+.matrix-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:13px;
+}
+
+.matrix-title strong{font-size:13px}
+
+.matrix-title span{
+    font-size:10px;
+    color:var(--muted);
+}
+
+.matrix-table{
+    border-collapse:separate;
+    border-spacing:5px;
+    width:100%;
+}
+
+.matrix-table th{
+    font-size:10px;
+    color:var(--muted);
+    font-weight:700;
+    min-width:56px;
+}
+
+.matrix-table td{padding:0}
+
+.matrix-table input{
+    width:100%;
+    min-width:54px;
+    padding:10px 3px;
+    border:1px solid var(--line);
+    background:#fafaf8;
+    border-radius:6px;
+    text-align:center;
+    font-size:11px;
+    color:var(--ink);
+    outline:none;
+}
+
+.matrix-table input:focus{
+    border-color:var(--green2);
+    background:white;
+    box-shadow:0 0 0 2px rgba(52,123,97,.08);
+}
+
+.matrix-table .diagonal{
+    background:#edf2eb;
+    font-weight:800;
+}
+
+.vector-input{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.vector-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.vector-row label{
+    font-size:10px;
+    color:var(--muted);
+    width:30px;
+}
+
+.vector-row input{
+    width:100%;
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    background:#fafaf8;
+    outline:none;
+    font-size:11px;
+}
+
+.vector-row input:focus{
+    border-color:var(--green2);
+}
+
+.control-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+    margin-top:25px;
+    padding-top:22px;
+    border-top:1px solid var(--line);
+}
+
+.control-field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.control-field label{
+    font-size:11px;
+    color:#616b64;
+    font-weight:700;
+}
+
+.control-field input,.control-field select{
+    padding:11px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fafaf8;
+    font-size:12px;
+    color:var(--ink);
+    outline:none;
+    width:100%;
+}
+
+.control-field input:focus,.control-field select:focus{
+    border-color:var(--green2);
+}
+
+.control-field small{
+    font-size:10px;
+    color:var(--muted);
+}
+
+.editor-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:20px;
+}
+
+#validationMessage{
+    margin-top:15px;
+    display:none;
+}
+
+.metrics-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:13px;
+    margin-bottom:18px;
+}
+
+.metric{
+    background:white;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:17px;
+}
+
+.metric-label{
+    color:var(--muted);
+    font-size:10px;
+    margin-bottom:8px;
+}
+
+.metric-value{
+    font-family:'Manrope',sans-serif;
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:-.7px;
+}
+
+.metric-detail{
+    font-size:10px;
+    color:var(--muted);
+    margin-top:5px;
+}
+
+.results-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:17px;
+    margin-top:18px;
+}
+
+.result-card{
+    padding:21px;
+}
+
+.result-card h3{
+    font-size:14px;
+    margin-bottom:5px;
+}
+
+.result-card>p{
+    font-size:10px;
+    color:var(--muted);
+    margin-bottom:16px;
+}
+
+.solution-list{
+    display:grid;
+    gap:8px;
+}
+
+.solution-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    background:var(--surface2);
+    padding:10px 12px;
+    border-radius:7px;
+    font-size:11px;
+}
+
+.solution-row span:first-child{
+    color:var(--muted);
+}
+
+.solution-row strong{
+    font-family:monospace;
+    font-size:11px;
+    text-align:right;
+    overflow-wrap:anywhere;
+}
+
+.table-wrapper{
+    overflow-x:auto;
+    width:100%;
+}
+
+.data-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:11px;
+    min-width:500px;
+}
+
+.data-table th{
+    background:#f3f4ef;
+    color:#58645c;
+    font-size:10px;
+    text-align:left;
+    padding:12px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.data-table td{
+    padding:12px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+}
+
+.data-table tr:last-child td{border-bottom:0}
+
+.data-table td strong{font-weight:800}
+
+.data-table .number{
+    font-family:monospace;
+}
+
+.comparison-card{
+    padding:23px;
+    margin-top:18px;
+}
+
+.comparison-card h3{
+    font-size:14px;
+    margin-bottom:15px;
+}
+
+.badge{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:20px;
+    font-size:9px;
+    font-weight:800;
+}
+
+.badge.success{background:var(--green-light);color:var(--green)}
+.badge.warning{background:var(--orange-light);color:#98652e}
+.badge.error{background:var(--red-light);color:var(--red)}
+
+.chart-card{
+    padding:23px;
+    margin-top:18px;
+}
+
+.chart-card h3{
+    font-size:14px;
+    margin-bottom:4px;
+}
+
+.chart-card p{
+    font-size:10px;
+    color:var(--muted);
+    margin-bottom:17px;
+}
+
+canvas{
+    width:100%;
+    height:260px;
+    display:block;
+}
+
+.chart-legend{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-top:12px;
+    font-size:10px;
+    color:var(--muted);
+}
+
+.legend-dot{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    margin-right:5px;
+}
+
+.qa-summary{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:13px;
+    margin-bottom:18px;
+}
+
+.qa-box{
+    padding:17px;
+    background:white;
+    border:1px solid var(--line);
+    border-radius:12px;
+}
+
+.qa-box small{
+    display:block;
+    color:var(--muted);
+    font-size:10px;
+}
+
+.qa-box strong{
+    display:block;
+    font-size:22px;
+    margin-top:5px;
+}
+
+.qa-card{padding:22px}
+
+.qa-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:700px;
+    font-size:11px;
+}
+
+.qa-table th{
+    text-align:left;
+    background:#f3f4ef;
+    padding:12px;
+    font-size:10px;
+}
+
+.qa-table td{
+    padding:13px 12px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+    line-height:1.7;
+}
+
+.qa-table td:first-child{font-weight:700}
+
+.qa-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:17px;
+}
+
+.conclusions-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:17px;
+}
+
+.conclusion-card{padding:23px}
+
+.conclusion-card h3{
+    font-size:14px;
+    margin-bottom:12px;
+}
+
+.conclusion-card p{
+    color:#68716b;
+    font-size:12px;
+    line-height:1.9;
+    margin-bottom:9px;
+}
+
+.reference-list{
+    display:grid;
+    gap:13px;
+}
+
+.reference{
+    padding-bottom:13px;
+    border-bottom:1px solid var(--line);
+    font-size:11px;
+    line-height:1.8;
+    color:#68716b;
+}
+
+.reference:last-child{border:0;padding-bottom:0}
+
+.reference a{
+    color:var(--green);
+    font-weight:700;
+}
+
+.footer{
+    background:#293b32;
+    color:#e8eee9;
+    padding:30px 7%;
+    text-align:center;
+}
+
+.footer strong{
+    font-family:'Manrope',sans-serif;
+    font-size:16px;
+}
+
+.footer p{
+    font-size:10px;
+    color:#b3c0b6;
+    margin-top:7px;
+}
+
+.empty-state{
+    padding:30px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+}
+
+#toast{
+    position:fixed;
+    bottom:22px;
+    right:22px;
+    background:#293b32;
+    color:white;
+    padding:13px 19px;
+    border-radius:10px;
+    font-size:12px;
+    box-shadow:0 5px 25px #0002;
+    opacity:0;
+    transform:translateY(10px);
+    transition:.25s;
+    pointer-events:none;
+    z-index:500;
+}
+
+#toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+@media(max-width:850px){
+    .intro-grid,.editor-grid,.results-grid,.conclusions-grid{grid-template-columns:1fr}
+    .metrics-grid{grid-template-columns:repeat(2,1fr)}
+    .scenario-grid{grid-template-columns:1fr}
+    .explanation-grid{grid-template-columns:1fr}
+    .scenario-card p{min-height:0}
+}
+
+@media(max-width:600px){
+    .topbar{padding:0 5%}
+    .top-links{display:none}
+    .hero{padding:48px 6%}
+    .hero h1{letter-spacing:-1.5px}
+    .hero-bottom{gap:18px}
+    .container{padding:30px 15px 60px}
+    .section-heading h2{font-size:21px}
+    .control-grid{grid-template-columns:1fr}
+    .metrics-grid{grid-template-columns:1fr 1fr}
+    .metric{padding:13px}
+    .metric-value{font-size:17px}
+    .editor-card{padding:14px}
+    .qa-summary{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <a href="#inicio" class="brand">
+        <div class="brand-icon">ƒ</div>
+        Finan<span>Sys</span>
+    </a>
+
+    <nav class="top-links">
+        <a href="#caso">Caso financiero</a>
+        <a href="#modelo">Modelo matemático</a>
+        <a href="#editor">Simulador</a>
+        <a href="#resultados">Resultados</a>
+        <a href="#qa">Pruebas QA</a>
+    </nav>
+
+    <div class="status-pill">● Sistema interactivo</div>
+</header>
+
+<section class="hero" id="inicio">
+    <div class="hero-content">
+        <div class="eyebrow">Métodos numéricos · Aplicación financiera</div>
+
+        <h1>
+            Optimización de recursos mediante
+            <span>Gradientes Conjugados.</span>
+        </h1>
+
+        <p class="hero-description">
+            Simulador financiero para la asignación y ajuste de presupuestos
+            en proyectos de desarrollo de software. Analiza tres escenarios
+            financieros mediante Gradientes Conjugados Precondicionados,
+            comparando precisión, condicionamiento y velocidad de convergencia.
+        </p>
+
+        <div class="hero-bottom">
+            <div class="hero-data">
+                <small>Universidad</small>
+                <strong>Universidad Mayor de San Andrés</strong>
+            </div>
+            <div class="hero-data">
+                <small>Carrera</small>
+                <strong>Informática</strong>
+            </div>
+            <div class="hero-data">
+                <small>Mención</small>
+                <strong>Desarrollo de Software</strong>
+            </div>
+            <div class="hero-data">
+                <small>Área</small>
+                <strong>Finanzas y tecnología</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+
+<!-- CASO FINANCIERO -->
+
+<section class="section" id="caso">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">01 / Contexto del proyecto</div>
+            <h2>Caso de estudio</h2>
+            <p>Asignación y ajuste presupuestario de recursos para el desarrollo de software.</p>
+        </div>
+    </div>
+
+    <div class="intro-grid">
+
+        <div class="card intro-main">
+            <h3>Gestión financiera de un proyecto tecnológico</h3>
+
+            <p>
+                El desarrollo de una aplicación informática requiere distribuir
+                recursos económicos entre diferentes áreas de trabajo. Una
+                asignación inadecuada puede provocar retrasos, problemas de
+                calidad, infraestructura insuficiente o riesgos de seguridad.
+            </p>
+
+            <p>
+                Para representar esta situación se propone un modelo financiero
+                que permite calcular ajustes presupuestarios para cinco
+                categorías fundamentales de un proyecto de software. Las
+                decisiones de asignación están relacionadas entre sí: aumentar
+                los recursos de una categoría puede modificar las necesidades
+                financieras de otras.
+            </p>
+
+            <p>
+                El sistema utiliza un conjunto de ecuaciones lineales
+                simultáneas. Su solución permite determinar los ajustes
+                presupuestarios que satisfacen las relaciones financieras
+                establecidas en el modelo.
+            </p>
+
+            <div class="notice green">
+                <strong>Procedencia de los datos:</strong>
+                Los valores iniciales son datos hipotéticos de demostración,
+                construidos para representar un proyecto tecnológico. No
+                corresponden a estados financieros oficiales de una empresa.
+                Todos los coeficientes y términos independientes pueden
+                modificarse para estudiar otros proyectos.
+            </div>
+        </div>
+
+        <div class="intro-side">
+            <h3>Categorías presupuestarias</h3>
+
+            <div class="variable-list">
+                <div class="variable-item">
+                    <span>x₁</span>
+                    <span>Desarrollo frontend</span>
+                </div>
+                <div class="variable-item">
+                    <span>x₂</span>
+                    <span>Desarrollo backend</span>
+                </div>
+                <div class="variable-item">
+                    <span>x₃</span>
+                    <span>Pruebas y calidad (QA)</span>
+                </div>
+                <div class="variable-item">
+                    <span>x₄</span>
+                    <span>Infraestructura y servicios cloud</span>
+                </div>
+                <div class="variable-item">
+                    <span>x₅</span>
+                    <span>Ciberseguridad</span>
+                </div>
+            </div>
+
+            <div class="notice orange">
+                <strong>Unidad monetaria:</strong>
+                Todos los resultados presupuestarios se expresan en miles
+                de bolivianos (Bs).
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ESCENARIOS -->
+
+<section class="section" id="escenarios">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">02 / Simulación financiera</div>
+            <h2>Escenarios de análisis</h2>
+            <p>Los tres escenarios mantienen las mismas variables y estructura general, modificando los datos financieros y el condicionamiento de la matriz.</p>
+        </div>
+    </div>
+
+    <div class="scenario-grid">
+
+        <div class="scenario-card ideal">
+            <div class="scenario-tag" style="color:var(--green)">Escenario 01</div>
+            <h3>Situación ideal</h3>
+            <p>
+                Proyecto estable, con distribución equilibrada de recursos,
+                costos controlados y baja interdependencia entre categorías.
+            </p>
+            <button onclick="loadScenario('ideal')">Cargar escenario ideal →</button>
+        </div>
+
+        <div class="scenario-card stress">
+            <div class="scenario-tag" style="color:var(--orange)">Escenario 02</div>
+            <h3>Bajo estrés financiero</h3>
+            <p>
+                Incremento de costos operativos, mayores requerimientos
+                tecnológicos y ajustes en las necesidades presupuestarias.
+            </p>
+            <button onclick="loadScenario('stress')">Cargar escenario de estrés →</button>
+        </div>
+
+        <div class="scenario-card bad">
+            <div class="scenario-tag" style="color:var(--red)">Escenario 03</div>
+            <h3>Mal condicionado</h3>
+            <p>
+                Elevada interdependencia entre las categorías presupuestarias.
+                Pequeñas variaciones pueden producir cambios importantes
+                en la solución.
+            </p>
+            <button onclick="loadScenario('bad')">Cargar escenario mal condicionado →</button>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- FORMULACIÓN -->
+
+<section class="section" id="modelo">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">03 / Fundamentación matemática</div>
+            <h2>Formulación del modelo</h2>
+            <p>Representación del problema financiero mediante un sistema de ecuaciones lineales.</p>
+        </div>
+    </div>
+
+    <div class="card formulation">
+
+        <div class="formula">
+            A · x = b
+
+            <small>
+                Sistema lineal de cinco ecuaciones y cinco incógnitas (n = 5).
+            </small>
+        </div>
+
+        <div class="explanation-grid">
+
+            <div class="explanation">
+                <h4>Matriz A</h4>
+                <p>
+                    Representa las relaciones de costos, ponderaciones
+                    presupuestarias e interdependencias entre las cinco
+                    categorías del proyecto.
+                </p>
+            </div>
+
+            <div class="explanation">
+                <h4>Vector x</h4>
+                <p>
+                    Contiene los ajustes presupuestarios que se deben
+                    determinar para frontend, backend, QA, infraestructura
+                    y ciberseguridad.
+                </p>
+            </div>
+
+            <div class="explanation">
+                <h4>Vector b</h4>
+                <p>
+                    Representa los requerimientos financieros ponderados
+                    de cada categoría, expresados en miles de bolivianos.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="notice green">
+            <strong>Interpretación de los coeficientes:</strong>
+            Los elementos diagonales aᵢᵢ representan la ponderación o
+            sensibilidad financiera de cada categoría. Los elementos
+            fuera de la diagonal aᵢⱼ representan la relación entre dos
+            categorías presupuestarias. Un mayor valor de interacción
+            representa una mayor dependencia dentro del modelo.
+        </div>
+
+        <div class="notice orange">
+            <strong>Condiciones matemáticas:</strong>
+            La matriz A debe ser cuadrada, simétrica (A = Aᵀ) y
+            definida positiva (xᵀAx > 0 para todo x distinto de cero).
+            El simulador verifica estas propiedades antes de ejecutar
+            los métodos numéricos, utilizando la simetría y la
+            factorización de Cholesky.
+        </div>
+
+    </div>
+
+</section>
+
+<!-- EDITOR -->
+
+<section class="section" id="editor">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">04 / Interfaz de entrada</div>
+            <h2>Configuración del sistema</h2>
+            <p>Modifica los coeficientes, términos independientes y parámetros numéricos. Los resultados se actualizarán automáticamente.</p>
+        </div>
+    </div>
+
+    <div class="card editor-card">
+
+        <div class="editor-toolbar">
+            <div>
+                <h3>Editor de matriz y vectores</h3>
+                <p>Todos los valores son editables.</p>
+            </div>
+
+            <button class="btn" onclick="resetCurrentScenario()">
+                ↺ Restaurar escenario
+            </button>
+        </div>
+
+        <div class="editor-grid">
+
+            <div class="matrix-wrapper">
+                <div class="matrix-title">
+                    <strong>Matriz de coeficientes A</strong>
+                    <span>5 × 5</span>
+                </div>
+
+                <table class="matrix-table" id="matrixTable"></table>
+            </div>
+
+            <div>
+
+                <div class="matrix-title">
+                    <strong>Vector independiente b</strong>
+                    <span>5 × 1</span>
+                </div>
+
+                <div class="vector-input" id="vectorB"></div>
+
+                <div style="height:24px"></div>
+
+                <div class="matrix-title">
+                    <strong>Vector inicial x₀</strong>
+                    <span>5 × 1</span>
+                </div>
+
+                <div class="vector-input" id="vectorX0"></div>
+
+            </div>
+
+        </div>
+
+        <div class="control-grid">
+
+            <div class="control-field">
+                <label for="tolerance">Tolerancia</label>
+                <input id="tolerance" type="number" value="0.000001" min="0.0000000001" max="0.1" step="any">
+                <small>Criterio: ||rₖ||₂ / ||b||₂</small>
+            </div>
+
+            <div class="control-field">
+                <label for="maxIterations">Máximo de iteraciones</label>
+                <input id="maxIterations" type="number" value="100" min="1" max="10000" step="1">
+                <small>Límite de seguridad para ambos métodos.</small>
+            </div>
+
+            <div class="control-field">
+                <label for="preconditioner">Precondicionador</label>
+                <select id="preconditioner">
+                    <option value="jacobi">Jacobi (diagonal)</option>
+                    <option value="ichol" selected>Cholesky incompleto IC(0)</option>
+                </select>
+                <small>Se utiliza para el método GCP.</small>
+            </div>
+
+            <div class="control-field">
+                <label for="initialMode">Vector inicial</label>
+                <select id="initialMode">
+                    <option value="zero" selected>Vector cero (x₀ = 0)</option>
+                    <option value="custom">Valores personalizados</option>
+                </select>
+                <small>También puedes editar directamente x₀.</small>
+            </div>
+
+        </div>
+
+        <div class="editor-actions">
+            <button class="btn primary" onclick="calculateAll()">
+                Calcular y actualizar resultados →
+            </button>
+
+            <button class="btn" onclick="loadScenario('ideal')">
+                Escenario ideal
+            </button>
+
+            <button class="btn" onclick="loadScenario('stress')">
+                Bajo estrés
+            </button>
+
+            <button class="btn" onclick="loadScenario('bad')">
+                Mal condicionado
+            </button>
+        </div>
+
+        <div id="validationMessage" class="notice"></div>
+
+    </div>
+
+</section>
+
+<!-- RESULTADOS -->
+
+<section class="section" id="resultados">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">05 / Resultados numéricos</div>
+            <h2>Análisis de resultados</h2>
+            <p>Solución de referencia, Gradientes Conjugados simples y Gradientes Conjugados Precondicionados.</p>
+        </div>
+    </div>
+
+    <div id="resultArea">
+
+        <div class="empty-state card">
+            Cargando sistema matemático...
+        </div>
+
+    </div>
+
+</section>
+
+<!-- COMPARACIÓN DE ESCENARIOS -->
+
+<section class="section" id="comparacion">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">06 / Comparación global</div>
+            <h2>Comparación de los tres escenarios</h2>
+            <p>Resultados obtenidos al ejecutar los tres modelos financieros con los parámetros actuales.</p>
+        </div>
+    </div>
+
+    <div class="card comparison-card">
+
+        <div class="editor-toolbar">
+            <div>
+                <h3>Tabla comparativa obligatoria</h3>
+                <p>Se ejecutan nuevamente los tres escenarios con la configuración actual.</p>
+            </div>
+
+            <button class="btn primary" onclick="runComparison()">
+                Ejecutar comparación
+            </button>
+        </div>
+
+        <div class="table-wrapper" id="comparisonTable">
+            <div class="empty-state">Presiona ejecutar comparación para generar los resultados.</div>
+        </div>
+
+        <div class="notice green">
+            <strong>Importante:</strong>
+            La comparación utiliza los parámetros de tolerancia, máximo
+            de iteraciones y precondicionador configurados en el simulador.
+            Los datos de cada escenario se mantienen independientes de
+            las modificaciones manuales realizadas en el editor.
+        </div>
+
+    </div>
+
+</section>
+
+<!-- GRAFICOS -->
+
+<section class="section" id="graficos">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">07 / Visualización</div>
+            <h2>Comportamiento de los algoritmos</h2>
+            <p>Representación de la convergencia y comparación de los resultados calculados.</p>
+        </div>
+    </div>
+
+    <div class="chart-card card">
+        <h3>Convergencia de los métodos iterativos</h3>
+        <p>Residuo relativo en función del número de iteraciones. La línea horizontal representa la tolerancia configurada.</p>
+
+        <canvas id="convergenceChart"></canvas>
+
+        <div class="chart-legend">
+            <span><i class="legend-dot" style="background:#d28a46"></i>Gradientes Conjugados (GC)</span>
+            <span><i class="legend-dot" style="background:#347b61"></i>Gradientes Conjugados Precondicionados (GCP)</span>
+            <span><i class="legend-dot" style="background:#bd5550"></i>Tolerancia</span>
+        </div>
+    </div>
+
+    <div class="chart-card card">
+        <h3>Distribución presupuestaria calculada</h3>
+        <p>Comparación de los ajustes presupuestarios obtenidos por los tres métodos.</p>
+
+        <canvas id="solutionChart"></canvas>
+
+        <div class="chart-legend">
+            <span><i class="legend-dot" style="background:#617c91"></i>Referencia directa</span>
+            <span><i class="legend-dot" style="background:#d28a46"></i>GC</span>
+            <span><i class="legend-dot" style="background:#347b61"></i>GCP</span>
+        </div>
+    </div>
+
+</section>
+
+<!-- QA -->
+
+<section class="section" id="qa">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">08 / Control de calidad</div>
+            <h2>Módulo de pruebas de software</h2>
+            <p>Verificación funcional de la aplicación, validaciones matemáticas y comportamiento de los algoritmos.</p>
+        </div>
+    </div>
+
+    <div class="qa-summary">
+        <div class="qa-box">
+            <small>Pruebas ejecutadas</small>
+            <strong id="qaExecuted">0 / 4</strong>
+        </div>
+
+        <div class="qa-box">
+            <small>Pruebas aprobadas</small>
+            <strong id="qaPassed" style="color:var(--green)">0</strong>
+        </div>
+
+        <div class="qa-box">
+            <small>Pruebas fallidas</small>
+            <strong id="qaFailed" style="color:var(--red)">0</strong>
+        </div>
+    </div>
+
+    <div class="card qa-card">
+
+        <div class="editor-toolbar">
+            <div>
+                <h3>Registro de casos de prueba</h3>
+                <p>Las pruebas se ejecutan realmente sobre las funciones del simulador.</p>
+            </div>
+
+            <button class="btn primary" onclick="runTests()">
+                Ejecutar todas las pruebas
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="qa-table">
+                <thead>
+                    <tr>
+                        <th>Prueba</th>
+                        <th>Entrada</th>
+                        <th>Resultado esperado</th>
+                        <th>Resultado obtenido</th>
+                        <th>Conclusión</th>
+                    </tr>
+                </thead>
+
+                <tbody id="qaTableBody">
+                    <tr>
+                        <td>1. Carga de escenarios</td>
+                        <td>Ideal, estrés y mal condicionado.</td>
+                        <td>Carga correcta de los tres sistemas.</td>
+                        <td>Pendiente de ejecución.</td>
+                        <td><span class="badge warning">Pendiente</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>2. Validación de matriz</td>
+                        <td>Matriz deliberadamente no simétrica.</td>
+                        <td>Detectar el error sin interrumpir la aplicación.</td>
+                        <td>Pendiente de ejecución.</td>
+                        <td><span class="badge warning">Pendiente</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>3. Edición dinámica</td>
+                        <td>Modificar un término independiente.</td>
+                        <td>Actualizar automáticamente los resultados.</td>
+                        <td>Pendiente de ejecución.</td>
+                        <td><span class="badge warning">Pendiente</span></td>
+                    </tr>
+
+                    <tr>
+                        <td>4. Precondicionamiento</td>
+                        <td>Comparar GC y GCP en el escenario mal condicionado.</td>
+                        <td>GCP converge en menor o igual número de iteraciones.</td>
+                        <td>Pendiente de ejecución.</td>
+                        <td><span class="badge warning">Pendiente</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="notice orange">
+            <strong>Control de calidad:</strong>
+            Una prueba se considera aprobada únicamente cuando el
+            resultado obtenido satisface la condición establecida.
+            El sistema no marca automáticamente todas las pruebas
+            como exitosas.
+        </div>
+
+    </div>
+
+</section>
+
+<!-- CONCLUSIONES -->
+
+<section class="section" id="conclusiones">
+
+    <div class="section-heading">
+        <div>
+            <div class="section-number">09 / Interpretación técnica</div>
+            <h2>Conclusiones y referencias</h2>
+            <p>Fundamentación matemática, interpretación financiera y documentación bibliográfica.</p>
+        </div>
+    </div>
+
+    <div class="conclusions-grid">
+
+        <div class="card conclusion-card">
+            <h3>Conclusiones del análisis</h3>
+
+            <div id="dynamicConclusions">
+                <p>
+                    El método de Gradientes Conjugados permite resolver
+                    sistemas lineales simétricos y definidos positivos.
+                    Su aplicación al modelo financiero permite calcular
+                    ajustes presupuestarios entre las categorías del
+                    proyecto de software.
+                </p>
+
+                <p>
+                    El precondicionamiento busca mejorar la convergencia
+                    del algoritmo, especialmente cuando las relaciones
+                    entre las variables generan problemas de
+                    condicionamiento numérico.
+                </p>
+
+                <p>
+                    La precisión del resultado depende de la matriz,
+                    los términos independientes, el vector inicial y
+                    la tolerancia seleccionada.
+                </p>
+            </div>
+        </div>
+
+        <div class="card conclusion-card">
+            <h3>Referencias bibliográficas</h3>
+
+            <div class="reference-list">
+
+                <div class="reference">
+                    Suñagua S., P. (2020). <strong>Método de Gradientes
+                    Conjugados Precondicionado.</strong> Revista Boliviana
+                    de Matemática – UMSA, 04, 2–7.
+                    <br>
+                    <span style="color:var(--muted)">Referencia principal del desafío académico.</span>
+                </div>
+
+                <div class="reference">
+                    Golub, G. H., & Van Loan, C. F. (2013).
+                    <strong>Matrix Computations.</strong>
+                    4th edition. Johns Hopkins University Press.
+                    <br>
+                    <a href="https://jhupbooks.press.jhu.edu/title/matrix-computations" target="_blank" rel="noopener">
+                        Consultar publicación →
+                    </a>
+                </div>
+
+                <div class="reference">
+                    Saad, Y. (2003).
+                    <strong>Iterative Methods for Sparse Linear Systems.</strong>
+                    2nd edition. SIAM.
+                    <br>
+                    <a href="https://doi.org/10.1137/1.9780898718003" target="_blank" rel="noopener">
+                        Consultar publicación →
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+<footer class="footer">
+    <strong>FinanSys · Simulación financiera</strong>
+    <p>Universidad Mayor de San Andrés · Carrera de Informática · Desarrollo de Software</p>
+    <p>Desafío académico de Métodos Numéricos · Método de Gradientes Conjugados Precondicionado</p>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+
+/* =========================================================
+   1. CONFIGURACIÓN Y DATOS DEL MODELO
+========================================================= */
+
+const N = 5;
+
+const variableNames = [
+    "Frontend",
+    "Backend",
+    "QA y pruebas",
+    "Infraestructura",
+    "Ciberseguridad"
+];
+
+const scenarios = {
+
+    ideal: {
+        name:"Ideal",
+
+        description:"Situación financiera estable y equilibrada.",
+
+        A:[
+            [8,   0.3, 0.2, 0.1, 0.1],
+            [0.3, 7,   0.3, 0.2, 0.1],
+            [0.2, 0.3, 6,   0.2, 0.2],
+            [0.1, 0.2, 0.2, 5,   0.2],
+            [0.1, 0.1, 0.2, 0.2, 4]
+        ],
+
+        b:[120,100,90,75,60]
+    },
+
+    stress: {
+        name:"Bajo estrés financiero",
+
+        description:"Incremento de costos y necesidades presupuestarias.",
+
+        A:[
+            [8.8, 0.35,0.24,0.12,0.12],
+            [0.35,7.7, 0.35,0.24,0.12],
+            [0.24,0.35,6.6, 0.24,0.24],
+            [0.12,0.24,0.24,5.5, 0.24],
+            [0.12,0.12,0.24,0.24,4.4]
+        ],
+
+        b:[145,120,105,92,78]
+    },
+
+    bad: {
+        name:"Mal condicionado",
+
+        description:"Elevada interdependencia entre las categorías.",
+
+        A:[
+            [1,     0.999, 0.999, 0.999, 0.999],
+            [0.999, 1,     0.999, 0.999, 0.999],
+            [0.999, 0.999, 1,     0.999, 0.999],
+            [0.999, 0.999, 0.999, 1,     0.999],
+            [0.999, 0.999, 0.999, 0.999, 1]
+        ],
+
+        b:[100,100.01,99.99,100.02,99.98]
+    }
+
+};
+
+let currentScenario = "ideal";
+
+let currentResult = null;
+
+let comparisonResults = {};
+
+let qaResults = [];
+
+
+/* =========================================================
+   2. FUNCIONES MATEMÁTICAS BÁSICAS
+========================================================= */
+
+function zeros(n,m){
+    return Array.from({length:n},()=>Array(m).fill(0));
+}
+
+function identity(n){
+    const I=zeros(n,n);
+    for(let i=0;i<n;i++) I[i][i]=1;
+    return I;
+}
+
+function cloneMatrix(A){
+    return A.map(row=>row.slice());
+}
+
+function cloneVector(v){
+    return v.slice();
+}
+
+function dot(a,b){
+    return a.reduce((s,v,i)=>s+v*b[i],0);
+}
+
+function norm(v){
+    return Math.sqrt(dot(v,v));
+}
+
+function subtract(a,b){
+    return a.map((v,i)=>v-b[i]);
+}
+
+function addScaled(a,b,k){
+    return a.map((v,i)=>v+k*b[i]);
+}
+
+function matVec(A,x){
+    return A.map(row=>dot(row,x));
+}
+
+function transpose(A){
+    return A[0].map((_,j)=>A.map(row=>row[j]));
+}
+
+function matMul(A,B){
+
+    const BT=transpose(B);
+
+    return A.map(row=>
+        BT.map(col=>dot(row,col))
+    );
+}
+
+function formatNumber(value,digits=8){
+
+    if(!Number.isFinite(value)) return "No definido";
+
+    if(value===0) return "0";
+
+    if(Math.abs(value)>=1e7 || Math.abs(value)<1e-5){
+        return value.toExponential(5);
+    }
+
+    return Number(value.toPrecision(digits)).toString();
+}
+
+function relativeResidual(A,x,b){
+
+    const r=subtract(b,matVec(A,x));
+
+    const denominator=norm(b);
+
+    return denominator===0 ? norm(r) : norm(r)/denominator;
+}
+
+
+/* =========================================================
+   3. VALIDACIÓN DE LA MATRIZ
+========================================================= */
+
+function validateSymmetry(A,tolerance=1e-10){
+
+    for(let i=0;i<A.length;i++){
+
+        for(let j=i+1;j<A.length;j++){
+
+            const scale=Math.max(1,Math.abs(A[i][j]),Math.abs(A[j][i]));
+
+            if(Math.abs(A[i][j]-A[j][i])>tolerance*scale){
+
+                return {
+                    valid:false,
+                    message:`La matriz no es simétrica: a${i+1}${j+1} ≠ a${j+1}${i+1}.`
+                };
+            }
+        }
+    }
+
+    return {valid:true};
+}
+
+function cholesky(A){
+
+    const n=A.length;
+
+    const L=zeros(n,n);
+
+    for(let i=0;i<n;i++){
+
+        for(let j=0;j<=i;j++){
+
+            let sum=A[i][j];
+
+            for(let k=0;k<j;k++){
+                sum-=L[i][k]*L[j][k];
+            }
+
+            if(i===j){
+
+                if(!Number.isFinite(sum) || sum<=1e-13){
+                    throw new Error(
+                        "La matriz no es definida positiva. Cholesky encontró un pivote no positivo."
+                    );
+                }
+
+                L[i][j]=Math.sqrt(sum);
+
+            }else{
+
+                L[i][j]=sum/L[j][j];
+
+            }
+        }
+    }
+
+    return L;
+}
+
+function validateMatrix(A){
+
+    if(!Array.isArray(A)||A.length!==N){
+        throw new Error("La matriz debe ser de orden 5 × 5.");
+    }
+
+    for(let i=0;i<N;i++){
+
+        if(A[i].length!==N){
+            throw new Error("La matriz debe ser cuadrada.");
+        }
+
+        for(let j=0;j<N;j++){
+
+            if(!Number.isFinite(A[i][j])){
+                throw new Error("La matriz contiene valores no numéricos.");
+            }
+        }
+    }
+
+    const symmetry=validateSymmetry(A);
+
+    if(!symmetry.valid){
+        throw new Error(symmetry.message);
+    }
+
+    const L=cholesky(A);
+
+    return {
+        valid:true,
+        L:L,
+        message:"Matriz simétrica y definida positiva."
+    };
+}
+
+
+/* =========================================================
+   4. MÉTODO DIRECTO: CHOLESKY
+========================================================= */
+
+function forwardSubstitution(L,b){
+
+    const n=b.length;
+
+    const x=Array(n).fill(0);
+
+    for(let i=0;i<n;i++){
+
+        let sum=b[i];
+
+        for(let j=0;j<i;j++){
+            sum-=L[i][j]*x[j];
+        }
+
+        x[i]=sum/L[i][i];
+    }
+
+    return x;
+}
+
+function backwardSubstitution(U,b){
+
+    const n=b.length;
+
+    const x=Array(n).fill(0);
+
+    for(let i=n-1;i>=0;i--){
+
+        let sum=b[i];
+
+        for(let j=i+1;j<n;j++){
+            sum-=U[i][j]*x[j];
+        }
+
+        if(Math.abs(U[i][i])<1e-14){
+            throw new Error("Pivote numérico demasiado pequeño.");
+        }
+
+        x[i]=sum/U[i][i];
+    }
+
+    return x;
+}
+
+function directSolve(A,b){
+
+    const L=cholesky(A);
+
+    const y=forwardSubstitution(L,b);
+
+    const x=backwardSubstitution(transpose(L),y);
+
+    return x;
+}
+
+
+/* =========================================================
+   5. PRECONDICIONADORES
+========================================================= */
+
+function applyJacobi(A,r){
+
+    return r.map((value,i)=>value/A[i][i]);
+}
+
+function applyCholeskyPreconditioner(L,r){
+
+    const y=forwardSubstitution(L,r);
+
+    return backwardSubstitution(transpose(L),y);
+}
+
+function buildPreconditioner(A,type){
+
+    if(type==="jacobi"){
+
+        for(let i=0;i<N;i++){
+
+            if(A[i][i]<=0){
+                throw new Error("Jacobi requiere elementos diagonales positivos.");
+            }
+        }
+
+        return {
+            name:"Jacobi",
+            solve:(r)=>applyJacobi(A,r),
+            factor:null
+        };
+    }
+
+    if(type==="ichol"){
+
+        /*
+          IC(0):
+          Se construye una factorización de Cholesky incompleta.
+
+          La matriz de este modelo es densa y contiene interacciones
+          entre todas las categorías. Por ello, su patrón de dispersión
+          incluye todas las posiciones y la factorización IC(0)
+          coincide con la factorización de Cholesky completa.
+
+          Esto permite demostrar el efecto del precondicionamiento
+          sobre un sistema con fuerte acoplamiento.
+        */
+
+        const L=cholesky(A);
+
+        return {
+            name:"IC(0) - Cholesky incompleto",
+            solve:(r)=>applyCholeskyPreconditioner(L,r),
+            factor:L
+        };
+    }
+
+    throw new Error("Precondicionador no reconocido.");
+}
+
+
+/* =========================================================
+   6. GRADIENTES CONJUGADOS Y GRADIENTES CONJUGADOS
+      PRECONDICIONADOS
+========================================================= */
+
+function conjugateGradient(A,b,x0,tolerance,maxIterations,preconditioner=null){
+
+    let x=cloneVector(x0);
+
+    let r=subtract(b,matVec(A,x));
+
+    const bNorm=norm(b);
+
+    const denominator=bNorm===0 ? 1 : bNorm;
+
+    let residual=norm(r)/denominator;
+
+    const history=[residual];
+
+    if(residual<tolerance){
+
+        return {
+            x:x,
+            iterations:0,
+            residual:residual,
+            converged:true,
+            history:history
+        };
+    }
+
+    let z=preconditioner ? preconditioner.solve(r) : cloneVector(r);
+
+    let p=cloneVector(z);
+
+    let rho=dot(r,z);
+
+    if(!Number.isFinite(rho)||rho<=0){
+        throw new Error("El precondicionador no produjo una dirección válida.");
+    }
+
+    let iterations=0;
+
+    let converged=false;
+
+    for(let k=0;k<maxIterations;k++){
+
+        const Ap=matVec(A,p);
+
+        const pAp=dot(p,Ap);
+
+        if(!Number.isFinite(pAp)||pAp<=0){
+            throw new Error("El producto pᵀAp no es positivo. No se puede continuar.");
+        }
+
+        const alpha=rho/pAp;
+
+        x=addScaled(x,p,alpha);
+
+        r=addScaled(r,Ap,-alpha);
+
+        residual=norm(r)/denominator;
+
+        iterations=k+1;
+
+        history.push(residual);
+
+        if(residual<tolerance){
+
+            converged=true;
+
+            break;
+        }
+
+        z=preconditioner ? preconditioner.solve(r) : cloneVector(r);
+
+        const rhoNew=dot(r,z);
+
+        if(!Number.isFinite(rhoNew)||rhoNew<=0){
+            break;
+        }
+
+        const beta=rhoNew/rho;
+
+        p=addScaled(z,p,beta);
+
+        rho=rhoNew;
+    }
+
+    return {
+        x:x,
+        iterations:iterations,
+        residual:residual,
+        converged:converged,
+        history:history
+    };
+}
+
+
+/* =========================================================
+   7. NÚMERO DE CONDICIÓN
+========================================================= */
+
+/*
+   Método de Jacobi para calcular los autovalores de una
+   matriz real simétrica.
+
+   Se utiliza para obtener el número de condición espectral:
+   kappa(A) = lambda_max / lambda_min.
+*/
+
+function symmetricEigenvalues(A){
+
+    const n=A.length;
+
+    const B=cloneMatrix(A);
+
+    const maxIterations=10000;
+
+    for(let iteration=0;iteration<maxIterations;iteration++){
+
+        let max=0;
+
+        let p=0;
+        let q=1;
+
+        for(let i=0;i<n;i++){
+
+            for(let j=i+1;j<n;j++){
+
+                if(Math.abs(B[i][j])>max){
+
+                    max=Math.abs(B[i][j]);
+
+                    p=i;
+                    q=j;
+                }
+            }
+        }
+
+        if(max<1e-13) break;
+
+        const theta=0.5*Math.atan2(
+            2*B[p][q],
+            B[q][q]-B[p][p]
+        );
+
+        const c=Math.cos(theta);
+        const s=Math.sin(theta);
+
+        const app=B[p][p];
+        const aqq=B[q][q];
+        const apq=B[p][q];
+
+        B[p][p]=c*c*app-2*s*c*apq+s*s*aqq;
+
+        B[q][q]=s*s*app+2*s*c*apq+c*c*aqq;
+
+        B[p][q]=0;
+        B[q][p]=0;
+
+        for(let k=0;k<n;k++){
+
+            if(k===p||k===q) continue;
+
+            const bkp=B[k][p];
+            const bkq=B[k][q];
+
+            B[k][p]=c*bkp-s*bkq;
+            B[p][k]=B[k][p];
+
+            B[k][q]=s*bkp+c*bkq;
+            B[q][k]=B[k][q];
+        }
+    }
+
+    return B.map((row,i)=>row[i]).sort((a,b)=>a-b);
+}
+
+function matrixCondition(A){
+
+    const eigenvalues=symmetricEigenvalues(A);
+
+    const min=eigenvalues[0];
+
+    const max=eigenvalues[eigenvalues.length-1];
+
+    if(min<=0||!Number.isFinite(min)){
+        return Infinity;
+    }
+
+    return max/min;
+}
+
+function inverseLower(L){
+
+    const n=L.length;
+
+    const result=zeros(n,n);
+
+    for(let j=0;j<n;j++){
+
+        const e=Array(n).fill(0);
+
+        e[j]=1;
+
+        const column=forwardSubstitution(L,e);
+
+        for(let i=0;i<n;i++){
+            result[i][j]=column[i];
+        }
+    }
+
+    return result;
+}
+
+function preconditionedCondition(A,preconditioner){
+
+    let transformed;
+
+    if(preconditioner.factor){
+
+        const Linv=inverseLower(preconditioner.factor);
+
+        transformed=matMul(
+            matMul(Linv,A),
+            transpose(Linv)
+        );
+
+    }else{
+
+        const D=zeros(N,N);
+
+        for(let i=0;i<N;i++){
+            D[i][i]=1/Math.sqrt(A[i][i]);
+        }
+
+        transformed=matMul(
+            matMul(D,A),
+            D
+        );
+    }
+
+    return matrixCondition(transformed);
+}
+
+
+/* =========================================================
+   8. CÁLCULO DE ERRORES
+========================================================= */
+
+function calculateErrors(reference,approximation){
+
+    return reference.map((value,i)=>{
+
+        const absolute=Math.abs(value-approximation[i]);
+
+        const relative=value===0 ? null : absolute/Math.abs(value);
+
+        const percentage=relative===null ? null : relative*100;
+
+        return {
+            absolute:absolute,
+            relative:relative,
+            percentage:percentage
+        };
+    });
+}
+
+
+/* =========================================================
+   9. LECTURA DE LOS DATOS DEL EDITOR
+========================================================= */
+
+function readMatrix(){
+
+    const A=zeros(N,N);
+
+    for(let i=0;i<N;i++){
+
+        for(let j=0;j<N;j++){
+
+            const input=document.getElementById(`a-${i}-${j}`);
+
+            if(!input||input.value.trim()===""){
+                throw new Error(`Falta el coeficiente a${i+1}${j+1}.`);
+            }
+
+            const value=Number(input.value);
+
+            if(!Number.isFinite(value)){
+                throw new Error(`El coeficiente a${i+1}${j+1} no es válido.`);
+            }
+
+            A[i][j]=value;
+        }
+    }
+
+    return A;
+}
+
+function readVector(id){
+
+    const v=[];
+
+    for(let i=0;i<N;i++){
+
+        const input=document.getElementById(`${id}-${i}`);
+
+        if(!input||input.value.trim()===""){
+            throw new Error("Hay valores vacíos en uno de los vectores.");
+        }
+
+        const value=Number(input.value);
+
+        if(!Number.isFinite(value)){
+            throw new Error("Uno de los vectores contiene valores inválidos.");
+        }
+
+        v.push(value);
+    }
+
+    return v;
+}
+
+
+/* =========================================================
+   10. INTERFAZ DEL EDITOR
+========================================================= */
+
+function renderEditor(A,b,x0){
+
+    const table=document.getElementById("matrixTable");
+
+    let html="<thead><tr><th></th>";
+
+    for(let j=0;j<N;j++){
+        html+=`<th>x${j+1}</th>`;
+    }
+
+    html+="</tr></thead><tbody>";
+
+    for(let i=0;i<N;i++){
+
+        html+=`<tr><th>a${i+1}</th>`;
+
+        for(let j=0;j<N;j++){
+
+            html+=`
+            <td>
+                <input
+                    type="number"
+                    step="any"
+                    id="a-${i}-${j}"
+                    class="${i===j?'diagonal':''}"
+                    value="${A[i][j]}"
+                    aria-label="Coeficiente a${i+1}${j+1}"
+                >
+            </td>`;
+        }
+
+        html+="</tr>";
+    }
+
+    html+="</tbody>";
+
+    table.innerHTML=html;
+
+    renderVector("vectorB","b",b);
+
+    renderVector("vectorX0","x0",x0);
+}
+
+function renderVector(containerId,prefix,values){
+
+    const container=document.getElementById(containerId);
+
+    container.innerHTML=values.map((value,i)=>`
+
+        <div class="vector-row">
+
+            <label>${prefix==="b"?"b":"x"}${i+1}</label>
+
+            <input
+                type="number"
+                step="any"
+                id="${prefix}-${i}"
+                value="${value}"
+                aria-label="Componente ${prefix}${i+1}"
+            >
+
+        </div>
+
+    `).join("");
+}
+
+
+/* =========================================================
+   11. CARGA DE ESCENARIOS
+========================================================= */
+
+function loadScenario(name,showMessage=true){
+
+    if(!scenarios[name]) return;
+
+    currentScenario=name;
+
+    const scenario=scenarios[name];
+
+    renderEditor(
+        scenario.A,
+        scenario.b,
+        Array(N).fill(0)
+    );
+
+    document.getElementById("initialMode").value="zero";
+
+    if(showMessage){
+        toast(`Escenario ${scenario.name} cargado.`);
+    }
+
+    calculateAll();
+}
+
+function resetCurrentScenario(){
+
+    loadScenario(currentScenario);
+
+}
+
+
+/* =========================================================
+   12. MOTOR PRINCIPAL DE CÁLCULO
+========================================================= */
+
+function calculateSystem(A,b,x0,options){
+
+    const validation=validateMatrix(A);
+
+    const direct=directSolve(A,b);
+
+    const conditionA=matrixCondition(A);
+
+    const gc=conjugateGradient(
+        A,
+        b,
+        x0,
+        options.tolerance,
+        options.maxIterations,
+        null
+    );
+
+    const preconditioner=buildPreconditioner(
+        A,
+        options.preconditioner
+    );
+
+    const gcp=conjugateGradient(
+        A,
+        b,
+        x0,
+        options.tolerance,
+        options.maxIterations,
+        preconditioner
+    );
+
+    const errors=calculateErrors(direct,gcp.x);
+
+    const conditionM=preconditionedCondition(A,preconditioner);
+
+    return {
+
+        A:A,
+        b:b,
+        x0:x0,
+
+        direct:direct,
+
+        gc:gc,
+
+        gcp:gcp,
+
+        errors:errors,
+
+        conditionA:conditionA,
+
+        conditionM:conditionM,
+
+        preconditioner:preconditioner.name,
+
+        validation:validation,
+
+        scenario:currentScenario
+    };
+}
+
+function calculateAll(){
+
+    const message=document.getElementById("validationMessage");
+
+    message.style.display="none";
+
+    try{
+
+        const A=readMatrix();
+
+        const b=readVector("b");
+
+        const x0=readVector("x0");
+
+        const tolerance=Number(
+            document.getElementById("tolerance").value
+        );
+
+        const maxIterations=Number(
+            document.getElementById("maxIterations").value
+        );
+
+        if(!Number.isFinite(tolerance)||tolerance<=0||tolerance>=1){
+            throw new Error("La tolerancia debe ser mayor que 0 y menor que 1.");
+        }
+
+        if(!Number.isInteger(maxIterations)||maxIterations<1||maxIterations>10000){
+            throw new Error("El máximo de iteraciones debe ser un entero entre 1 y 10000.");
+        }
+
+        const preconditioner=document.getElementById("preconditioner").value;
+
+        const result=calculateSystem(
+            A,b,x0,
+            {
+                tolerance:tolerance,
+                maxIterations:maxIterations,
+                preconditioner:preconditioner
+            }
+        );
+
+        currentResult=result;
+
+        renderResults(result);
+
+        message.className="notice green";
+
+        message.innerHTML="<strong>Validación correcta.</strong> Matriz simétrica y definida positiva. Los resultados han sido actualizados.";
+
+        message.style.display="block";
+
+        if(comparisonResults[currentScenario]){
+            delete comparisonResults[currentScenario];
+        }
+
+        updateConclusions(result);
+
+        drawCharts(result);
+
+    }catch(error){
+
+        currentResult=null;
+
+        message.className="notice red";
+
+        message.innerHTML=`<strong>Error de validación:</strong> ${escapeHTML(error.message)}`;
+
+        message.style.display="block";
+
+        document.getElementById("resultArea").innerHTML=`
+            <div class="card empty-state">
+                <strong style="color:var(--red)">No se puede resolver el sistema.</strong>
+                <p style="margin-top:8px">${escapeHTML(error.message)}</p>
+                <p style="margin-top:5px">Corrige los datos de entrada e inténtalo nuevamente.</p>
+            </div>
+        `;
+
+        clearCharts();
+    }
+}
+
+
+/* =========================================================
+   13. PRESENTACIÓN DE RESULTADOS
+========================================================= */
+
+function solutionRows(values){
+
+    return values.map((v,i)=>`
+
+        <div class="solution-row">
+
+            <span>x${i+1} · ${variableNames[i]}</span>
+
+            <strong>${formatNumber(v,10)}</strong>
+
+        </div>
+
+    `).join("");
+}
+
+function renderResults(result){
+
+    const area=document.getElementById("resultArea");
+
+    const convergedGC=result.gc.converged;
+
+    const convergedGCP=result.gcp.converged;
+
+    const conditionLabel=
+        result.conditionA<100 ? "Bien condicionada" :
+        result.conditionA<1000 ? "Moderadamente condicionada" :
+        "Mal condicionada";
+
+    area.innerHTML=`
+
+        <div class="metrics-grid">
+
+            <div class="metric">
+                <div class="metric-label">Condición de A · κ(A)</div>
+                <div class="metric-value">${formatNumber(result.conditionA,6)}</div>
+                <div class="metric-detail">${conditionLabel}</div>
+            </div>
+
+            <div class="metric">
+                <div class="metric-label">Condición precondicionada</div>
+                <div class="metric-value">${formatNumber(result.conditionM,6)}</div>
+                <div class="metric-detail">κ(M⁻¹A), espectralmente equivalente</div>
+            </div>
+
+            <div class="metric">
+                <div class="metric-label">Iteraciones GC</div>
+                <div class="metric-value">${result.gc.iterations}</div>
+                <div class="metric-detail">${convergedGC?"Convergió":"No alcanzó tolerancia"}</div>
+            </div>
+
+            <div class="metric">
+                <div class="metric-label">Iteraciones GCP</div>
+                <div class="metric-value">${result.gcp.iterations}</div>
+                <div class="metric-detail">${convergedGCP?"Convergió":"No alcanzó tolerancia"}</div>
+            </div>
+
+        </div>
+
+        <div class="results-grid">
+
+            <div class="card result-card">
+
+                <h3>Solución numérica de referencia</h3>
+
+                <p>Método directo · Factorización de Cholesky</p>
+
+                <div class="solution-list">
+                    ${solutionRows(result.direct)}
+                </div>
+
+                <div class="notice green">
+                    Solución calculada mediante el método directo
+                    para utilizarla como referencia en el análisis de errores.
+                </div>
+
+            </div>
+
+            <div class="card result-card">
+
+                <h3>Gradientes Conjugados (GC)</h3>
+
+                <p>Algoritmo iterativo sin precondicionamiento.</p>
+
+                <div class="solution-list">
+                    ${solutionRows(result.gc.x)}
+                </div>
+
+                <div class="notice ${convergedGC?"green":"orange"}">
+                    <strong>${convergedGC?"Convergencia alcanzada":"Convergencia no alcanzada"}</strong><br>
+                    Iteraciones: ${result.gc.iterations}<br>
+                    Residuo relativo: ${formatNumber(result.gc.residual,10)}
+                </div>
+
+            </div>
+
+            <div class="card result-card">
+
+                <h3>Gradientes Conjugados Precondicionados</h3>
+
+                <p>Algoritmo GCP · ${escapeHTML(result.preconditioner)}</p>
+
+                <div class="solution-list">
+                    ${solutionRows(result.gcp.x)}
+                </div>
+
+                <div class="notice ${convergedGCP?"green":"orange"}">
+                    <strong>${convergedGCP?"Convergencia alcanzada":"Convergencia no alcanzada"}</strong><br>
+                    Iteraciones: ${result.gcp.iterations}<br>
+                    Residuo relativo: ${formatNumber(result.gcp.residual,10)}
+                </div>
+
+            </div>
+
+            <div class="card result-card">
+
+                <h3>Diagnóstico del sistema</h3>
+
+                <p>Propiedades matemáticas y parámetros de ejecución.</p>
+
+                <div class="solution-list">
+
+                    <div class="solution-row">
+                        <span>Orden del sistema</span>
+                        <strong>5 × 5</strong>
+                    </div>
+
+                    <div class="solution-row">
+                        <span>Simetría</span>
+                        <strong>Verificada</strong>
+                    </div>
+
+                    <div class="solution-row">
+                        <span>Definición positiva</span>
+                        <strong>Verificada</strong>
+                    </div>
+
+                    <div class="solution-row">
+                        <span>Precondicionador</span>
+                        <strong>${escapeHTML(result.preconditioner)}</strong>
+                    </div>
+
+                    <div class="solution-row">
+                        <span>Residuo relativo GCP</span>
+                        <strong>${formatNumber(result.gcp.residual,8)}</strong>
+                    </div>
+
+                    <div class="solution-row">
+                        <span>Residuo relativo GC</span>
+                        <strong>${formatNumber(result.gc.residual,8)}</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card comparison-card">
+
+            <h3>Análisis de errores por componente</h3>
+
+            <p style="font-size:10px;color:var(--muted);margin-bottom:15px">
+                Comparación entre la solución numérica de referencia y la solución GCP.
+            </p>
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Referencia</th>
+                            <th>GCP</th>
+                            <th>Error absoluto</th>
+                            <th>Error relativo</th>
+                            <th>Error porcentual</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        ${result.errors.map((e,i)=>`
+
+                            <tr>
+
+                                <td><strong>x${i+1}</strong></td>
+
+                                <td class="number">${formatNumber(result.direct[i])}</td>
+
+                                <td class="number">${formatNumber(result.gcp.x[i])}</td>
+
+                                <td class="number">${formatNumber(e.absolute)}</td>
+
+                                <td class="number">${e.relative===null?"No definido":formatNumber(e.relative)}</td>
+
+                                <td class="number">${e.percentage===null?"No definido":formatNumber(e.percentage)+" %"}</td>
+
+                            </tr>
+
+                        `).join("")}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="notice green">
+                <strong>Residuo relativo global GCP:</strong>
+                ${formatNumber(result.gcp.residual,12)}
+                <br>
+                <strong>Residuo relativo global GC:</strong>
+                ${formatNumber(result.gc.residual,12)}
+            </div>
+
+        </div>
+
+        <div class="card comparison-card">
+
+            <h3>Interpretación financiera de la solución</h3>
+
+            <div class="table-wrapper">
+
+                <table class="data-table">
+
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Ajuste calculado</th>
+                            <th>Interpretación</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        ${result.gcp.x.map((value,i)=>`
+
+                            <tr>
+
+                                <td><strong>${variableNames[i]}</strong></td>
+
+                                <td class="number">${formatNumber(value,9)} miles de Bs</td>
+
+                                <td>
+                                    ${value>0.000001?"Ajuste presupuestario positivo.":
+                                    value< -0.000001?"Ajuste presupuestario negativo.":
+                                    "Ajuste prácticamente nulo."}
+                                </td>
+
+                            </tr>
+
+                        `).join("")}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="notice orange">
+                Los valores representan la solución matemática del modelo.
+                No deben interpretarse automáticamente como presupuestos
+                definitivos: una asignación real también requiere considerar
+                restricciones de disponibilidad, contratos, prioridades
+                y viabilidad económica.
+            </div>
+
+        </div>
+
+    `;
+}
+
+
+/* =========================================================
+   14. COMPARACIÓN DE ESCENARIOS
+========================================================= */
+
+function runComparison(){
+
+    try{
+
+        const tolerance=Number(document.getElementById("tolerance").value);
+
+        const maxIterations=Number(document.getElementById("maxIterations").value);
+
+        const preconditioner=document.getElementById("preconditioner").value;
+
+        if(!Number.isFinite(tolerance)||tolerance<=0||tolerance>=1){
+            throw new Error("La tolerancia debe estar entre 0 y 1.");
+        }
+
+        if(!Number.isInteger(maxIterations)||maxIterations<1){
+            throw new Error("El máximo de iteraciones no es válido.");
+        }
+
+        comparisonResults={};
+
+        for(const key of ["ideal","stress","bad"]){
+
+            const scenario=scenarios[key];
+
+            comparisonResults[key]=calculateSystem(
+
+                cloneMatrix(scenario.A),
+
+                cloneVector(scenario.b),
+
+                Array(N).fill(0),
+
+                {
+                    tolerance:tolerance,
+                    maxIterations:maxIterations,
+                    preconditioner:preconditioner
+                }
+
+            );
+        }
+
+        renderComparison();
+
+        toast("Comparación de escenarios completada.");
+
+    }catch(error){
+
+        toast(error.message);
+
+        document.getElementById("comparisonTable").innerHTML=`
+            <div class="notice red">${escapeHTML(error.message)}</div>
+        `;
+    }
+}
+
+function renderComparison(){
+
+    const keys=["ideal","stress","bad"];
+
+    const labels=[
+        "Ideal",
+        "Bajo estrés",
+        "Mal condicionado"
+    ];
+
+    const rows=[
+
+        {
+            name:"Solución de referencia",
+            values:r=>r.direct.map(v=>formatNumber(v,5)).join(" · ")
+        },
+
+        {
+            name:"Solución GCP",
+            values:r=>r.gcp.x.map(v=>formatNumber(v,5)).join(" · ")
+        },
+
+        {
+            name:"Error absoluto máximo",
+            values:r=>formatNumber(Math.max(...r.errors.map(e=>e.absolute)))
+        },
+
+        {
+            name:"Error porcentual máximo",
+            values:r=>formatNumber(Math.max(...r.errors.map(e=>e.percentage??0)))+" %"
+        },
+
+        {
+            name:"Iteraciones GC",
+            values:r=>r.gc.iterations
+        },
+
+        {
+            name:"Iteraciones GCP",
+            values:r=>r.gcp.iterations
+        },
+
+        {
+            name:"Número de condición κ(A)",
+            values:r=>formatNumber(r.conditionA,6)
+        },
+
+        {
+            name:"Número de condición κ(M⁻¹A)",
+            values:r=>formatNumber(r.conditionM,6)
+        },
+
+        {
+            name:"Residuo relativo final GCP",
+            values:r=>formatNumber(r.gcp.residual,8)
+        },
+
+        {
+            name:"¿Convergió GC?",
+            values:r=>r.gc.converged?"Sí":"No"
+        },
+
+        {
+            name:"¿Convergió GCP?",
+            values:r=>r.gcp.converged?"Sí":"No"
+        },
+
+        {
+            name:"Interpretación financiera",
+            values:(r,i)=>{
+                if(i===0) return "Distribución estable.";
+                if(i===1) return "Mayores requerimientos de recursos.";
+                return "Alta dependencia entre categorías.";
+            }
+        }
+
+    ];
+
+    let html=`
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Indicador</th>
+                    ${labels.map(l=>`<th>${l}</th>`).join("")}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    for(const row of rows){
+
+        html+=`
+            <tr>
+                <td><strong>${row.name}</strong></td>
+                ${keys.map((key,i)=>`
+                    <td>${row.values(comparisonResults[key],i)}</td>
+                `).join("")}
+            </tr>
+        `;
+    }
+
+    html+="</tbody></table>";
+
+    document.getElementById("comparisonTable").innerHTML=html;
+}
+
+
+/* =========================================================
+   15. GRÁFICOS
+========================================================= */
+
+function clearCharts(){
+
+    ["convergenceChart","solutionChart"].forEach(id=>{
+
+        const canvas=document.getElementById(id);
+
+        const ctx=canvas.getContext("2d");
+
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+    });
+}
+
+function prepareCanvas(canvas){
+
+    const rect=canvas.getBoundingClientRect();
+
+    const ratio=window.devicePixelRatio||1;
+
+    canvas.width=Math.max(1,rect.width*ratio);
+
+    canvas.height=Math.max(1,rect.height*ratio);
+
+    const ctx=canvas.getContext("2d");
+
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+
+    return {
+        ctx:ctx,
+        width:rect.width,
+        height:rect.height
+    };
+}
+
+function drawConvergence(result){
+
+    const canvas=document.getElementById("convergenceChart");
+
+    const {ctx,width,height}=prepareCanvas(canvas);
+
+    ctx.clearRect(0,0,width,height);
+
+    const left=65;
+    const right=20;
+    const top=15;
+    const bottom=35;
+
+    const plotW=width-left-right;
+    const plotH=height-top-bottom;
+
+    const histories=[
+        {data:result.gc.history,color:"#d28a46"},
+        {data:result.gcp.history,color:"#347b61"}
+    ];
+
+    const maxIterations=Math.max(
+        1,
+        ...histories.map(h=>h.data.length-1)
+    );
+
+    const tolerance=Number(document.getElementById("tolerance").value);
+
+    const values=histories.flatMap(h=>h.data);
+
+    const minLog=Math.min(
+        -12,
+        Math.floor(Math.log10(tolerance))-1,
+        Math.floor(Math.log10(Math.max(1e-15,Math.min(...values))))-1
+    );
+
+    const maxLog=Math.max(
+        0,
+        Math.ceil(Math.log10(Math.max(...values)))
+    );
+
+    const yMin=Math.max(-16,minLog);
+
+    const yMax=maxLog;
+
+    function xPos(i){
+        return left+(i/maxIterations)*plotW;
+    }
+
+    function yPos(v){
+
+        const log=Math.log10(Math.max(v,Math.pow(10,yMin)));
+
+        return top+((yMax-log)/(yMax-yMin))*plotH;
+    }
+
+    ctx.strokeStyle="#e9e9e3";
+    ctx.lineWidth=1;
+
+    for(let i=0;i<=5;i++){
+
+        const y=top+i*plotH/5;
+
+        ctx.beginPath();
+        ctx.moveTo(left,y);
+        ctx.lineTo(width-right,y);
+        ctx.stroke();
+
+        const value=Math.pow(10,yMax-i*(yMax-yMin)/5);
+
+        ctx.fillStyle="#858d86";
+        ctx.font="10px DM Sans";
+        ctx.textAlign="right";
+        ctx.fillText(value.toExponential(0),left-9,y+3);
+    }
+
+    for(let i=0;i<=5;i++){
+
+        const x=left+i*plotW/5;
+
+        ctx.beginPath();
+        ctx.moveTo(x,top);
+        ctx.lineTo(x,height-bottom);
+        ctx.stroke();
+
+        ctx.fillStyle="#858d86";
+        ctx.textAlign="center";
+
+        ctx.fillText(
+            Math.round(i*maxIterations/5),
+            x,
+            height-13
+        );
+    }
+
+    const toleranceY=yPos(tolerance);
+
+    ctx.strokeStyle="#bd5550";
+    ctx.setLineDash([5,4]);
+
+    ctx.beginPath();
+    ctx.moveTo(left,toleranceY);
+    ctx.lineTo(width-right,toleranceY);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    histories.forEach(history=>{
+
+        ctx.strokeStyle=history.color;
+        ctx.lineWidth=2.5;
+        ctx.beginPath();
+
+        history.data.forEach((value,i)=>{
+
+            const x=xPos(i);
+            const y=yPos(value);
+
+            if(i===0) ctx.moveTo(x,y);
+            else ctx.lineTo(x,y);
+
+        });
+
+        ctx.stroke();
+
+        history.data.forEach((value,i)=>{
+
+            ctx.beginPath();
+
+            ctx.arc(
+                xPos(i),
+                yPos(value),
+                3,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fillStyle=history.color;
+            ctx.fill();
+        });
+
+    });
+
+}
+
+function drawSolutionChart(result){
+
+    const canvas=document.getElementById("solutionChart");
+
+    const {ctx,width,height}=prepareCanvas(canvas);
+
+    ctx.clearRect(0,0,width,height);
+
+    const left=45;
+    const right=15;
+    const top=15;
+    const bottom=42;
+
+    const plotW=width-left-right;
+    const plotH=height-top-bottom;
+
+    const series=[
+        {values:result.direct,color:"#617c91"},
+        {values:result.gc.x,color:"#d28a46"},
+        {values:result.gcp.x,color:"#347b61"}
+    ];
+
+    const all=series.flatMap(s=>s.values);
+
+    let min=Math.min(0,...all);
+    let max=Math.max(0,...all);
+
+    if(max===min) max=min+1;
+
+    const padding=(max-min)*.12;
+
+    min-=padding;
+    max+=padding;
+
+    const y=(value)=>top+(max-value)/(max-min)*plotH;
+
+    const zeroY=y(0);
+
+    ctx.strokeStyle="#e9e9e3";
+    ctx.lineWidth=1;
+
+    for(let i=0;i<=4;i++){
+
+        const yy=top+i*plotH/4;
+
+        ctx.beginPath();
+        ctx.moveTo(left,yy);
+        ctx.lineTo(width-right,yy);
+        ctx.stroke();
+
+        const value=max-i*(max-min)/4;
+
+        ctx.fillStyle="#858d86";
+        ctx.font="10px DM Sans";
+        ctx.textAlign="right";
+        ctx.fillText(formatNumber(value,3),left-7,yy+3);
+    }
+
+    const groupW=plotW/N;
+
+    const barW=Math.min(18,groupW/4);
+
+    series.forEach((s,index)=>{
+
+        s.values.forEach((value,i)=>{
+
+            const x=left+i*groupW+groupW/2+
+                (index-1)*barW;
+
+            const yy=y(value);
+
+            ctx.fillStyle=s.color;
+
+            ctx.fillRect(
+                x-barW/2,
+                Math.min(yy,zeroY),
+                barW-2,
+                Math.max(1,Math.abs(zeroY-yy))
+            );
+        });
+
+    });
+
+    ctx.fillStyle="#737d75";
+    ctx.font="10px DM Sans";
+    ctx.textAlign="center";
+
+    variableNames.forEach((name,i)=>{
+
+        ctx.fillText(
+            "x"+(i+1),
+            left+i*groupW+groupW/2,
+            height-15
+        );
+    });
+
+}
+
+function drawCharts(result){
+
+    drawConvergence(result);
+
+    drawSolutionChart(result);
+}
+
+function redrawCharts(){
+
+    if(currentResult){
+        drawCharts(currentResult);
+    }
+}
+
+
+/* =========================================================
+   16. CONCLUSIONES DINÁMICAS
+========================================================= */
+
+function updateConclusions(result){
+
+    const gc=result.gc;
+    const gcp=result.gcp;
+
+    const improvement=
+        gc.iterations-gcp.iterations;
+
+    const conditionText=
+        result.conditionA>1000
+        ?"La matriz presenta un condicionamiento elevado, por lo que las variaciones en los datos pueden tener un efecto importante sobre la solución."
+        :"La matriz presenta un condicionamiento relativamente controlado, lo que favorece la estabilidad numérica del sistema.";
+
+    let preconditionerText;
+
+    if(improvement>0){
+
+        preconditionerText=
+            `El GCP necesitó ${improvement} iteración(es) menos que el GC simple. El precondicionamiento mejoró la velocidad de convergencia en esta ejecución.`;
+
+    }else if(improvement===0){
+
+        preconditionerText=
+            "Ambos métodos necesitaron la misma cantidad de iteraciones. En esta ejecución no se observa una reducción del número de iteraciones.";
+
+    }else{
+
+        preconditionerText=
+            `El GCP necesitó ${Math.abs(improvement)} iteración(es) más que el GC simple. En esta ejecución el precondicionador seleccionado no redujo las iteraciones.`;
+    }
+
+    document.getElementById("dynamicConclusions").innerHTML=`
+
+        <p>
+            Para el escenario ${escapeHTML(scenarios[currentScenario].name)},
+            el método directo obtuvo la solución numérica de referencia.
+            El algoritmo GCP alcanzó ${gcp.converged?"la tolerancia establecida":"el límite de iteraciones sin alcanzar la tolerancia"}.
+        </p>
+
+        <p>
+            ${conditionText}
+            El número de condición de la matriz original es
+            κ(A) = ${formatNumber(result.conditionA,7)}.
+        </p>
+
+        <p>
+            ${preconditionerText}
+            El condicionamiento espectral de la matriz
+            precondicionada es κ(M⁻¹A) =
+            ${formatNumber(result.conditionM,7)}.
+        </p>
+
+        <p>
+            El residuo relativo final del GCP es
+            ${formatNumber(result.gcp.residual,10)}.
+            Los errores por componente permiten comprobar la
+            precisión de la solución aproximada respecto a
+            la referencia directa.
+        </p>
+
+        <p>
+            Desde el punto de vista financiero, los valores
+            calculados representan ajustes presupuestarios
+            matemáticos para las cinco áreas del proyecto.
+            Su interpretación debe complementarse con las
+            restricciones económicas y operativas reales.
+        </p>
+
+    `;
+}
+
+
+/* =========================================================
+   17. PRUEBAS DE SOFTWARE QA
+========================================================= */
+
+function runTests(){
+
+    const tests=[];
+
+    const tolerance=Number(document.getElementById("tolerance").value);
+
+    const maxIterations=Number(document.getElementById("maxIterations").value);
+
+    const preconditioner=document.getElementById("preconditioner").value;
+
+    const options={
+        tolerance:Number.isFinite(tolerance)&&tolerance>0&&tolerance<1?tolerance:1e-6,
+        maxIterations:Number.isInteger(maxIterations)&&maxIterations>0?maxIterations:100,
+        preconditioner:preconditioner
+    };
+
+
+    /* PRUEBA 1: CARGA DE ESCENARIOS */
+
+    try{
+
+        let loaded=0;
+
+        for(const key of ["ideal","stress","bad"]){
+
+            const scenario=scenarios[key];
+
+            const validation=validateMatrix(scenario.A);
+
+            if(validation.valid){
+                loaded++;
+            }
+        }
+
+        const pass=loaded===3;
+
+        tests.push({
+
+            name:"1. Carga de escenarios",
+
+            input:"Escenarios Ideal, Bajo estrés y Mal condicionado.",
+
+            expected:"Tres matrices simétricas y definidas positivas.",
+
+            obtained:`${loaded} de 3 escenarios validados correctamente.`,
+
+            pass:pass
+        });
+
+    }catch(error){
+
+        tests.push({
+            name:"1. Carga de escenarios",
+            input:"Tres modelos financieros.",
+            expected:"Validación correcta.",
+            obtained:error.message,
+            pass:false
+        });
+    }
+
+
+    /* PRUEBA 2: MATRIZ NO SIMÉTRICA */
+
+    try{
+
+        const invalid=cloneMatrix(scenarios.ideal.A);
+
+        invalid[0][1]=999;
+
+        let detected=false;
+
+        let obtained="";
+
+        try{
+
+            validateMatrix(invalid);
+
+        }catch(error){
+
+            detected=true;
+
+            obtained=error.message;
+        }
+
+        tests.push({
+
+            name:"2. Validación de matriz no válida",
+
+            input:"Modificar a12 = 999 sin modificar a21.",
+
+            expected:"Detectar la falta de simetría y rechazar el sistema.",
+
+            obtained:detected?obtained:"La matriz inválida fue aceptada.",
+
+            pass:detected
+        });
+
+    }catch(error){
+
+        tests.push({
+            name:"2. Validación de matriz no válida",
+            input:"Matriz deliberadamente incorrecta.",
+            expected:"Capturar el error.",
+            obtained:error.message,
+            pass:false
+        });
+    }
+
+
+    /* PRUEBA 3: EDICIÓN DINÁMICA */
+
+    try{
+
+        const scenario=scenarios.ideal;
+
+        const A=cloneMatrix(scenario.A);
+
+        const b=cloneVector(scenario.b);
+
+        const x0=Array(N).fill(0);
+
+        const first=directSolve(A,b);
+
+        const changedB=cloneVector(b);
+
+        changedB[0]+=10;
+
+        const second=directSolve(A,changedB);
+
+        const changed=norm(subtract(first,second))>1e-9;
+
+        const residual=relativeResidual(A,second,changedB);
+
+        const correct=changed&&residual<1e-8;
+
+        tests.push({
+
+            name:"3. Edición dinámica",
+
+            input:"Incrementar b1 en 10 unidades.",
+
+            expected:"Modificar la solución y conservar un residuo pequeño.",
+
+            obtained:
+                `Cambio en la solución: ${changed?"Sí":"No"}. Residuo: ${formatNumber(residual,8)}.`,
+
+            pass:correct
+        });
+
+    }catch(error){
+
+        tests.push({
+            name:"3. Edición dinámica",
+            input:"Modificación del vector b.",
+            expected:"Recálculo de la solución.",
+            obtained:error.message,
+            pass:false
+        });
+    }
+
+
+    /* PRUEBA 4: COMPARACIÓN GC Y GCP */
+
+    try{
+
+        const scenario=scenarios.bad;
+
+        const A=cloneMatrix(scenario.A);
+
+        const b=cloneVector(scenario.b);
+
+        const x0=Array(N).fill(0);
+
+        const gc=conjugateGradient(
+            A,b,x0,
+            options.tolerance,
+            options.maxIterations
+        );
+
+        const M=buildPreconditioner(A,"ichol");
+
+        const gcp=conjugateGradient(
+            A,b,x0,
+            options.tolerance,
+            options.maxIterations,
+            M
+        );
+
+        const pass=
+            gcp.converged &&
+            gc.converged &&
+            gcp.iterations<=gc.iterations;
+
+        tests.push({
+
+            name:"4. Comparación de precondicionamiento",
+
+            input:"Sistema mal condicionado con precondicionador IC(0).",
+
+            expected:"GCP converge en menor o igual número de iteraciones que GC.",
+
+            obtained:
+                `GC: ${gc.iterations} iteraciones. GCP: ${gcp.iterations} iteraciones. Convergencia GCP: ${gcp.converged?"Sí":"No"}.`,
+
+            pass:pass
+        });
+
+    }catch(error){
+
+        tests.push({
+            name:"4. Comparación de precondicionamiento",
+            input:"Escenario mal condicionado.",
+            expected:"GCP con menor o igual número de iteraciones.",
+            obtained:error.message,
+            pass:false
+        });
+    }
+
+    qaResults=tests;
+
+    renderTests();
+}
+
+function renderTests(){
+
+    const body=document.getElementById("qaTableBody");
+
+    const passed=qaResults.filter(t=>t.pass).length;
+
+    const failed=qaResults.length-passed;
+
+    document.getElementById("qaExecuted").textContent=`${qaResults.length} / 4`;
+
+    document.getElementById("qaPassed").textContent=passed;
+
+    document.getElementById("qaFailed").textContent=failed;
+
+    body.innerHTML=qaResults.map(test=>`
+
+        <tr>
+
+            <td>${escapeHTML(test.name)}</td>
+
+            <td>${escapeHTML(test.input)}</td>
+
+            <td>${escapeHTML(test.expected)}</td>
+
+            <td>${escapeHTML(test.obtained)}</td>
+
+            <td>
+                <span class="badge ${test.pass?"success":"error"}">
+                    ${test.pass?"Aprobada":"Fallida"}
+                </span>
+            </td>
+
+        </tr>
+
+    `).join("");
+
+}
+
+
+/* =========================================================
+   18. ACTUALIZACIÓN AUTOMÁTICA DEL EDITOR
+========================================================= */
+
+let debounceTimer=null;
+
+document.addEventListener("input",function(event){
+
+    const target=event.target;
+
+    if(
+        target.matches("#matrixTable input")||
+        target.matches("#vectorB input")||
+        target.matches("#vectorX0 input")||
+        target.id==="tolerance"||
+        target.id==="maxIterations"
+    ){
+
+        clearTimeout(debounceTimer);
+
+        debounceTimer=setTimeout(()=>{
+            calculateAll();
+        },350);
+
+    }
+});
+
+document.getElementById("preconditioner").addEventListener("change",()=>{
+    calculateAll();
+});
+
+document.getElementById("initialMode").addEventListener("change",function(){
+
+    if(this.value==="zero"){
+
+        for(let i=0;i<N;i++){
+            document.getElementById(`x0-${i}`).value=0;
+        }
+
+        calculateAll();
+    }
+});
+
+
+/* =========================================================
+   19. UTILIDADES DE INTERFAZ
+========================================================= */
+
+function toast(message){
+
+    const element=document.getElementById("toast");
+
+    element.textContent=message;
+
+    element.classList.add("show");
+
+    clearTimeout(toast.timer);
+
+    toast.timer=setTimeout(()=>{
+        element.classList.remove("show");
+    },2600);
+}
+
+function escapeHTML(value){
+
+    return String(value).replace(/[&<>"']/g,function(character){
+
+        return {
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+        }[character];
+
+    });
+}
+
+
+/* =========================================================
+   20. INICIALIZACIÓN
+========================================================= */
+
+window.addEventListener("resize",()=>{
+
+    if(currentResult){
+        redrawCharts();
+    }
+
+});
+
+loadScenario("ideal",false);
+
+</script>
+
+</body>
+</html>
